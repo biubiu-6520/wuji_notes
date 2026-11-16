@@ -70,6 +70,7 @@
       id: uid(),
       text: (data.text || '').trim(),
       images: data.images || [],
+      audios: data.audios || [],
       groupId: data.groupId || '',
       createdAt: data.createdAt || Date.now(),
       updatedAt: Date.now()

@@ -14,10 +14,12 @@
     'editor', 'editorMask', 'drawer', 'drawerMask', 'groupDialog', 'dialogMask',
     'groupNameInput', 'groupDialogTitle', 'lightbox', 'lightboxImg',
     'confirmDialog', 'confirmMask', 'confirmTitle', 'confirmText', 'toast',
-    'weatherLine', 'weatherStatus', 'cityInput', 'searchInput', 'searchWrap'
+    'weatherLine', 'weatherStatus', 'cityInput', 'searchInput', 'searchWrap',
+    'editorAudios', 'btnRecord', 'recordStatus', 'recordTime', 'btnStopRecord'
   ].forEach(function (id) { el[id] = $(id); });
 
   var editorImages = [];
+  var editorAudios = [];
   var editingNoteId = null;
   var confirmCallback = null;
   var currentPage = 'notes';
@@ -76,6 +78,17 @@
         html += '<div class="note__images">';
         n.images.forEach(function (src, i) {
           html += '<img class="note__img" data-idx="' + i + '" src="' + src + '" alt="配图 ' + (i + 1) + '">';
+        });
+        html += '</div>';
+      }
+
+      if (n.audios && n.audios.length) {
+        html += '<div class="note__audios">';
+        n.audios.forEach(function (a, i) {
+          var secs = Math.round((a.duration || 0) / 1000);
+          html += '<div class="note__audio"><span class="note__audio-ico">♪</span>' +
+            '<audio controls preload="none" src="' + a.src + '"></audio>' +
+            '<span class="note__audio-dur">' + (a.duration ? Recorder.fmt(a.duration) : secs + 's') + '</span></div>';
         });
         html += '</div>';
       }
@@ -166,17 +179,48 @@
     editorImages.forEach(function (src, i) {
       var box = document.createElement('div');
       box.className = 'editor-img';
-      box.innerHTML = '<img src="' + src + '" alt="配图 ' + (i + 1) + '"><button data-idx="' + i + '">×</button>';
+      box.innerHTML = '<img src="' + src + '" alt="配图 ' + (i + 1) + '"><button data-audio="0" data-idx="' + i + '">×</button>';
       el.editorImages.appendChild(box);
     });
+  }
+
+  function renderEditorAudios() {
+    if (!el.editorAudios) return;
+    el.editorAudios.innerHTML = '';
+    editorAudios.forEach(function (a, i) {
+      var row = document.createElement('div');
+      row.className = 'editor-audio';
+      row.innerHTML = '<span class="editor-audio__ico">♪</span>' +
+        '<audio controls preload="metadata" src="' + a.src + '"></audio>' +
+        '<button data-audio="1" data-idx="' + i + '" aria-label="删除录音">×</button>';
+      el.editorAudios.appendChild(row);
+    });
+  }
+
+  /** 录音状态 UI：state ∈ idle/recording/tick */
+  function setRecordState(state, ms) {
+    if (!el.recordStatus) return;
+    if (state === 'recording' || state === 'tick') {
+      el.recordStatus.classList.remove('is-hidden');
+      if (el.btnRecord) el.btnRecord.classList.add('is-hidden');
+      if (el.recordTime) el.recordTime.textContent = Recorder.fmt(ms || 0);
+      if (el.btnStopRecord) el.btnStopRecord.classList.toggle('is-warn', state === 'tick' && (ms || 0) >= Recorder.MAX_MS - 15000);
+    } else {
+      el.recordStatus.classList.add('is-hidden');
+      if (el.btnRecord) el.btnRecord.classList.remove('is-hidden');
+      if (el.btnStopRecord) el.btnStopRecord.classList.remove('is-warn');
+    }
   }
 
   function openEditor(note, groups) {
     editingNoteId = note ? note.id : null;
     editorImages = note && note.images ? note.images.slice() : [];
+    editorAudios = note && note.audios ? note.audios.slice() : [];
     el.editorTitle.textContent = note ? '编辑灵感' : '记下灵感';
     el.editorText.value = note ? (note.text || '') : '';
     renderEditorImages();
+    renderEditorAudios();
+    setRecordState('idle');
     renderGroupOptions(groups, note ? note.groupId : '');
     el.editorMask.classList.remove('is-hidden');
     el.editor.classList.add('is-open');
@@ -188,6 +232,8 @@
     el.editorMask.classList.add('is-hidden');
     editingNoteId = null;
     editorImages = [];
+    editorAudios = [];
+    setRecordState('idle');
   }
 
   function getEditorData() {
@@ -195,12 +241,15 @@
       id: editingNoteId,
       text: el.editorText.value.trim(),
       images: editorImages.slice(),
+      audios: editorAudios.slice(),
       groupId: el.editorGroup.value
     };
   }
 
   function addEditorImage(src) { editorImages.push(src); renderEditorImages(); }
   function removeEditorImage(i) { editorImages.splice(i, 1); renderEditorImages(); }
+  function addEditorAudio(a) { editorAudios.push(a); renderEditorAudios(); }
+  function removeEditorAudio(i) { editorAudios.splice(i, 1); renderEditorAudios(); }
 
   /* ---------------- 面板开关 ---------------- */
   function openDrawer() { el.drawer.classList.add('is-open'); el.drawerMask.classList.remove('is-hidden'); }
@@ -259,6 +308,7 @@
     groupOf: groupOf,
     openEditor: openEditor, closeEditor: closeEditor, getEditorData: getEditorData,
     addEditorImage: addEditorImage, removeEditorImage: removeEditorImage,
+    addEditorAudio: addEditorAudio, removeEditorAudio: removeEditorAudio, setRecordState: setRecordState,
     openDrawer: openDrawer, closeDrawer: closeDrawer,
     openGroupDialog: openGroupDialog, closeGroupDialog: closeGroupDialog, getGroupName: getGroupName,
     openConfirm: openConfirm, closeConfirm: closeConfirm, takeConfirmCallback: takeConfirmCallback,

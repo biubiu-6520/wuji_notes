@@ -88,10 +88,14 @@
 
   /* ---------------- 记录操作 ---------------- */
   function saveEditor() {
+    if (Recorder.isRecording()) {
+      UI.toast('请先停止录音');
+      return;
+    }
     var d = UI.getEditorData();
-    if (!d.text && !d.images.length) { UI.toast('写点什么或加张图片吧'); return; }
+    if (!d.text && !d.images.length && !d.audios.length) { UI.toast('写点什么、加张图片或录段音吧'); return; }
     var task = d.id
-      ? DB.updateNote(d.id, { text: d.text, images: d.images, groupId: d.groupId })
+      ? DB.updateNote(d.id, { text: d.text, images: d.images, audios: d.audios, groupId: d.groupId })
       : DB.addNote(d);
     task.then(function () {
       UI.closeEditor();
@@ -187,8 +191,12 @@
     byId('fabAdd').addEventListener('click', function () { UI.openEditor(null, groupsCache); });
 
     // 编辑器
-    byId('btnEditorCancel').addEventListener('click', UI.closeEditor);
-    byId('editorMask').addEventListener('click', UI.closeEditor);
+    function safeCloseEditor() {
+      if (Recorder.isRecording()) Recorder.cancel();
+      UI.closeEditor();
+    }
+    byId('btnEditorCancel').addEventListener('click', safeCloseEditor);
+    byId('editorMask').addEventListener('click', safeCloseEditor);
     byId('btnEditorSave').addEventListener('click', saveEditor);
     byId('btnAddImage').addEventListener('click', function () { byId('imageInput').click(); });
     byId('imageInput').addEventListener('change', function (e) {
@@ -222,6 +230,39 @@
     byId('editorImages').addEventListener('click', function (e) {
       var btn = e.target.closest('button[data-idx]');
       if (btn) UI.removeEditorImage(parseInt(btn.dataset.idx, 10));
+    });
+
+    // 录音
+    byId('btnRecord').addEventListener('click', function () {
+      if (!Recorder.supported()) { UI.toast('当前环境不支持录音'); return; }
+      UI.toast('正在请求麦克风权限…');
+      Recorder.start(function (state, payload) {
+        if (state === 'recording' || state === 'tick') {
+          UI.setRecordState(state, payload);
+        } else if (state === 'done') {
+          UI.setRecordState('idle');
+          UI.addEditorAudio(payload);
+          UI.toast('录音已添加（' + Recorder.fmt(payload.duration) + '）');
+        } else if (state === 'error') {
+          UI.setRecordState('idle');
+          UI.toast(payload || '录音失败');
+        } else if (state === 'idle') {
+          UI.setRecordState('idle');
+        }
+      }).catch(function (err) {
+        UI.setRecordState('idle');
+        var name = err && err.name;
+        if (name === 'NotAllowedError' || name === 'SecurityError') UI.toast('麦克风权限被拒绝，请在设置中允许');
+        else if (name === 'NotFoundError') UI.toast('未找到麦克风设备');
+        else UI.toast('无法开始录音：' + (err.message || '未知错误'));
+      });
+    });
+    byId('btnStopRecord').addEventListener('click', function () {
+      if (Recorder.isRecording()) { UI.toast('正在处理录音…'); Recorder.stop(); }
+    });
+    byId('editorAudios').addEventListener('click', function (e) {
+      var btn = e.target.closest('button[data-idx]');
+      if (btn) UI.removeEditorAudio(parseInt(btn.dataset.idx, 10));
     });
 
     // 灵感列表（事件委托）
