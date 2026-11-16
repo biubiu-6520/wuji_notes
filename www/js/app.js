@@ -195,13 +195,29 @@
       var files = Array.prototype.slice.call(e.target.files || []);
       e.target.value = '';
       if (!files.length) return;
-      UI.toast('正在压缩 ' + files.length + ' 张图片…');
-      Promise.all(files.map(function (f) { return DB.compressImage(f); }))
-        .then(function (arr) {
-          arr.forEach(UI.addEditorImage);
-          UI.toast('图片已添加');
-        })
-        .catch(function (err) { UI.toast('图片处理失败：' + err.message); });
+      // 逐张处理：单张失败不影响其余图片；跳过非图片与超大文件
+      var added = 0, failed = 0;
+      var queue = files.filter(function (f) {
+        if (!/^image\//.test(f.type)) return false;
+        if (f.size > 30 * 1024 * 1024) { failed++; return false; }
+        return true;
+      });
+      if (!queue.length) { UI.toast(failed ? '图片过大或格式不支持' : '未选择图片'); return; }
+      UI.toast('正在处理 ' + queue.length + ' 张图片…');
+      var chain = Promise.resolve();
+      queue.forEach(function (f) {
+        chain = chain.then(function () {
+          return DB.compressImage(f).then(function (src) {
+            UI.addEditorImage(src);
+            added++;
+          }).catch(function () { failed++; });
+        });
+      });
+      chain.then(function () {
+        var msg = added ? ('已添加 ' + added + ' 张图片') : '图片处理失败';
+        if (failed) msg += '（' + failed + ' 张失败）';
+        UI.toast(msg);
+      });
     });
     byId('editorImages').addEventListener('click', function (e) {
       var btn = e.target.closest('button[data-idx]');
