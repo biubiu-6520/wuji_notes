@@ -93,9 +93,9 @@
       return;
     }
     var d = UI.getEditorData();
-    if (!d.text && !d.images.length && !d.audios.length) { UI.toast('写点什么、加张图片或录段音吧'); return; }
+    if (!d.text && !d.images.length && !d.audios.length && !d.videos.length) { UI.toast('写点什么，或添加图片/视频/录音吧'); return; }
     var task = d.id
-      ? DB.updateNote(d.id, { text: d.text, images: d.images, audios: d.audios, groupId: d.groupId })
+      ? DB.updateNote(d.id, { text: d.text, images: d.images, audios: d.audios, videos: d.videos, groupId: d.groupId })
       : DB.addNote(d);
     task.then(function () {
       UI.closeEditor();
@@ -199,6 +199,47 @@
     byId('editorMask').addEventListener('click', safeCloseEditor);
     byId('btnEditorSave').addEventListener('click', saveEditor);
     byId('btnAddImage').addEventListener('click', function () { byId('imageInput').click(); });
+    byId('btnAddVideo').addEventListener('click', function () { byId('videoInput').click(); });
+    byId('btnCamera').addEventListener('click', function () { byId('cameraInput').click(); });
+    byId('btnCamcorder').addEventListener('click', function () { byId('camcorderInput').click(); });
+
+    // 统一处理媒体文件选择（相册视频 / 相机录像 / 相机拍照）
+    var MAX_VIDEO = 40 * 1024 * 1024; // 视频上限 40MB（转为 dataURL 存本地）
+    function handleVideos(e) {
+      var files = Array.prototype.slice.call(e.target.files || []);
+      e.target.value = '';
+      var queue = files.filter(function (f) {
+        return /^video\//.test(f.type) && f.size <= MAX_VIDEO;
+      });
+      if (!queue.length) { UI.toast('请选择视频文件（≤40MB）'); return; }
+      UI.toast('正在添加 ' + queue.length + ' 个视频…');
+      var chain = Promise.resolve(), added = 0, failed = 0;
+      queue.forEach(function (f) {
+        chain = chain.then(function () {
+          return DB.readAsDataURL(f, MAX_VIDEO).then(function (src) {
+            UI.addEditorVideo({ src: src, mime: f.type || 'video/mp4', name: f.name || '', createdAt: Date.now() });
+            added++;
+          }).catch(function () { failed++; });
+        });
+      });
+      chain.then(function () {
+        var msg = added ? ('已添加 ' + added + ' 个视频') : '视频处理失败';
+        if (failed) msg += '（' + failed + ' 个失败）';
+        UI.toast(msg);
+      });
+    }
+    function handleCameraPhoto(e) {
+      var files = Array.prototype.slice.call(e.target.files || []);
+      e.target.value = '';
+      if (!files.length) return;
+      var f = files[0];
+      DB.compressImage(f).then(function (src) {
+        UI.addEditorImage(src); UI.toast('照片已添加');
+      }).catch(function () { UI.toast('照片处理失败'); });
+    }
+    byId('videoInput').addEventListener('change', handleVideos);
+    byId('camcorderInput').addEventListener('change', handleVideos);
+    byId('cameraInput').addEventListener('change', handleCameraPhoto);
     byId('imageInput').addEventListener('change', function (e) {
       var files = Array.prototype.slice.call(e.target.files || []);
       e.target.value = '';
@@ -263,6 +304,10 @@
     byId('editorAudios').addEventListener('click', function (e) {
       var btn = e.target.closest('button[data-idx]');
       if (btn) UI.removeEditorAudio(parseInt(btn.dataset.idx, 10));
+    });
+    byId('editorVideos').addEventListener('click', function (e) {
+      var btn = e.target.closest('button[data-idx]');
+      if (btn) UI.removeEditorVideo(parseInt(btn.dataset.idx, 10));
     });
 
     // 灵感列表（事件委托）

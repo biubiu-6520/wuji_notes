@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleDevelopmentRegion</key><string>zh_CN</string>
+    <key>CFBundleDisplayName</key><string>雾记</string>
+    <key>CFBundleIdentifier</key><string>com.wuji.notes</string>
+    <key>CFBundleName</key><string>$(PRODUCT_NAME)</string>
+    <key>CFBundlePackageType</key><string>APPL</string>
+    <key>CFBundleShortVersionString</key><string>1.0</string>
+    <key>CFBundleVersion</key><string>1</string>
+    <key>UILaunchScreen</key><dict/>
+    <key>UIStatusBarHidden</key><true/>
+    <key>UIDeviceFamily</key><array><integer>1</integer><integer>2</integer></array>
+    <key>UISupportedInterfaceOrientations</key><array><string>UIInterfaceOrientationPortrait</string></array>
+    <!-- 隐私权限描述：相册、相机、麦克风 -->
+    <key>NSPhotoLibraryUsageDescription</key><string>用于选择图片和视频，记录你的灵感</string>
+    <key>NSPhotoLibraryAddUsageDescription</key><string>用于保存拍摄的图片和视频</string>
+    <key>NSCameraUsageDescription</key><string>用于拍照和录像，记录你的灵感</string>
+    <key>NSMicrophoneUsageDescription</key><string>用于录制声音灵感和视频声音</string>
+</dict>
+</plist>

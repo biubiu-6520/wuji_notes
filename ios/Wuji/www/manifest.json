@@ -1,0 +1,16 @@
+{
+  "name": "雾记 · 灵感笔记",
+  "short_name": "雾记",
+  "description": "记录日常写作灵感，按时间整理，按月回顾。",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#a9bec6",
+  "theme_color": "#7fb0b5",
+  "lang": "zh-CN",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

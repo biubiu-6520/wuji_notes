@@ -15,11 +15,12 @@
     'groupNameInput', 'groupDialogTitle', 'lightbox', 'lightboxImg',
     'confirmDialog', 'confirmMask', 'confirmTitle', 'confirmText', 'toast',
     'weatherLine', 'weatherStatus', 'cityInput', 'searchInput', 'searchWrap',
-    'editorAudios', 'btnRecord', 'recordStatus', 'recordTime', 'btnStopRecord'
+    'editorAudios', 'editorVideos', 'btnRecord', 'recordStatus', 'recordTime', 'btnStopRecord'
   ].forEach(function (id) { el[id] = $(id); });
 
   var editorImages = [];
   var editorAudios = [];
+  var editorVideos = [];
   var editingNoteId = null;
   var confirmCallback = null;
   var currentPage = 'notes';
@@ -78,6 +79,14 @@
         html += '<div class="note__images">';
         n.images.forEach(function (src, i) {
           html += '<img class="note__img" data-idx="' + i + '" src="' + src + '" alt="配图 ' + (i + 1) + '">';
+        });
+        html += '</div>';
+      }
+
+      if (n.videos && n.videos.length) {
+        html += '<div class="note__videos">';
+        n.videos.forEach(function (v, i) {
+          html += '<video class="note__video" controls preload="metadata" playsinline src="' + v.src + '"></video>';
         });
         html += '</div>';
       }
@@ -197,6 +206,18 @@
     });
   }
 
+  function renderEditorVideos() {
+    if (!el.editorVideos) return;
+    el.editorVideos.innerHTML = '';
+    editorVideos.forEach(function (v, i) {
+      var box = document.createElement('div');
+      box.className = 'editor-video';
+      box.innerHTML = '<video controls preload="metadata" playsinline src="' + v.src + '"></video>' +
+        '<button data-idx="' + i + '" aria-label="删除视频">×</button>';
+      el.editorVideos.appendChild(box);
+    });
+  }
+
   /** 录音状态 UI：state ∈ idle/recording/tick */
   function setRecordState(state, ms) {
     if (!el.recordStatus) return;
@@ -216,10 +237,12 @@
     editingNoteId = note ? note.id : null;
     editorImages = note && note.images ? note.images.slice() : [];
     editorAudios = note && note.audios ? note.audios.slice() : [];
+    editorVideos = note && note.videos ? note.videos.slice() : [];
     el.editorTitle.textContent = note ? '编辑灵感' : '记下灵感';
     el.editorText.value = note ? (note.text || '') : '';
     renderEditorImages();
     renderEditorAudios();
+    renderEditorVideos();
     setRecordState('idle');
     renderGroupOptions(groups, note ? note.groupId : '');
     el.editorMask.classList.remove('is-hidden');
@@ -233,6 +256,7 @@
     editingNoteId = null;
     editorImages = [];
     editorAudios = [];
+    editorVideos = [];
     setRecordState('idle');
   }
 
@@ -242,6 +266,7 @@
       text: el.editorText.value.trim(),
       images: editorImages.slice(),
       audios: editorAudios.slice(),
+      videos: editorVideos.slice(),
       groupId: el.editorGroup.value
     };
   }
@@ -250,6 +275,8 @@
   function removeEditorImage(i) { editorImages.splice(i, 1); renderEditorImages(); }
   function addEditorAudio(a) { editorAudios.push(a); renderEditorAudios(); }
   function removeEditorAudio(i) { editorAudios.splice(i, 1); renderEditorAudios(); }
+  function addEditorVideo(v) { editorVideos.push(v); renderEditorVideos(); }
+  function removeEditorVideo(i) { editorVideos.splice(i, 1); renderEditorVideos(); }
 
   /* ---------------- 面板开关 ---------------- */
   function openDrawer() { el.drawer.classList.add('is-open'); el.drawerMask.classList.remove('is-hidden'); }
@@ -309,6 +336,7 @@
     openEditor: openEditor, closeEditor: closeEditor, getEditorData: getEditorData,
     addEditorImage: addEditorImage, removeEditorImage: removeEditorImage,
     addEditorAudio: addEditorAudio, removeEditorAudio: removeEditorAudio, setRecordState: setRecordState,
+    addEditorVideo: addEditorVideo, removeEditorVideo: removeEditorVideo,
     openDrawer: openDrawer, closeDrawer: closeDrawer,
     openGroupDialog: openGroupDialog, closeGroupDialog: closeGroupDialog, getGroupName: getGroupName,
     openConfirm: openConfirm, closeConfirm: closeConfirm, takeConfirmCallback: takeConfirmCallback,

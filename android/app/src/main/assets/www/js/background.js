@@ -8,6 +8,8 @@
   var PHASE_CN = { dawn: '清晨', day: '白昼', dusk: '黄昏', night: '夜晚' };
   var lastPhase = null;
   var onPhaseChange = null;
+  var switchTimer = null;
+  var lastMood = null;
 
   function updateLine(data) {
     var line = document.getElementById('weatherLine');
@@ -36,6 +38,15 @@
       mood = data.mood || Weather.deriveMood((data && data.wxKey) || 'clear', phase);
     }
 
+    // 氛围真正发生变化时，先冻结雾气动画与过渡，避免多层高斯模糊同时重绘导致闪屏花屏
+    if (mood !== lastMood) {
+      document.body.classList.add('is-switching');
+      if (switchTimer) clearTimeout(switchTimer);
+      switchTimer = setTimeout(function () {
+        document.body.classList.remove('is-switching');
+      }, 480);
+      lastMood = mood;
+    }
     document.body.setAttribute('data-mood', mood);
     document.body.setAttribute('data-weather', mode === 'auto' && data ? (data.wxKey || '') : '');
     document.body.classList.toggle('no-ambient', mode === 'off');

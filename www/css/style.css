@@ -63,20 +63,19 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
   position:absolute; inset:-14%;
   background: linear-gradient(155deg, var(--c-top) 0%, var(--c-bottom) 50%, var(--c-top) 100%);
   filter: blur(24px);
-  transition: background 1.2s ease;
-  animation: base-breathe 24s ease-in-out infinite alternate;
+  transition: background .45s ease;
 }
 .ambient__glow {
   position:absolute; width:96vmax; height:96vmax; left:-28vmax; top:-34vmax;
   background: radial-gradient(circle, var(--c-glow) 0%, transparent 68%);
   filter: blur(30px);
   animation: glow-drift 34s ease-in-out infinite alternate;
-  transition: background 1.2s ease;
+  transition: background .45s ease;
 }
-/* 柔和雾团：更大半径、更高斯、带透明度呼吸 */
+/* 柔和雾团：更大半径、更高斯、带透明度呼吸（仅 transform/opacity 动画，不重算 filter） */
 .ambient__fog {
   position:absolute; border-radius:50%; filter: blur(64px); will-change: transform, opacity;
-  transition: background 1.2s ease;
+  transition: background .45s ease;
   animation: fog-breathe 11s ease-in-out infinite alternate;
 }
 .ambient__fog--1 {
@@ -97,14 +96,19 @@ svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width:
   background: radial-gradient(ellipse at 50% 40%, var(--fog-a) 0%, var(--fog-b) 46%, transparent 78%);
   filter: blur(40px);
   animation: veil-breathe 18s ease-in-out infinite alternate;
-  transition: background 1.2s ease;
+  transition: background .45s ease;
 }
+
+/* 切换氛围时：冻结雾气动画并去掉模糊重绘，避免闪屏花屏 */
+body.is-switching .ambient__fog,
+body.is-switching .ambient__glow,
+body.is-switching .ambient__veil,
+body.is-switching .ambient__base { animation-play-state: paused; transition: none; }
 .ambient__grain {
   position:absolute; inset:0; opacity:.12; pointer-events:none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.5'/%3E%3C/svg%3E");
   mix-blend-mode: soft-light;
 }
-@keyframes base-breathe { 0%{filter:blur(24px) brightness(1)} 100%{filter:blur(30px) brightness(1.04)} }
 @keyframes glow-drift { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(18vmax,12vmax) scale(1.16)} }
 @keyframes fog-a { 0%{transform:translate(-6%, -8%) scale(1)} 100%{transform:translate(20%, 14%) scale(1.22)} }
 @keyframes fog-b { 0%{transform:translate(10%, 6%) scale(1.12)} 100%{transform:translate(-22%, -12%) scale(1)} }
@@ -238,6 +242,8 @@ body[data-mood="fog"] .ambient__fog { filter: blur(76px); }
 .note__audio-ico { color:var(--accent); font-size:15px; width:15px; text-align:center; flex-shrink:0; }
 .note__audio audio { flex:1; min-width:0; height:34px; }
 .note__audio-dur { font-size:10.5px; color:var(--ink-faint); font-variant-numeric:tabular-nums; flex-shrink:0; }
+.note__videos { display:flex; flex-direction:column; gap:8px; margin-top:10px; }
+.note__video { width:100%; max-height:260px; border-radius:12px; background:#000; display:block; }
 .note__foot { display:flex; align-items:center; justify-content:space-between; margin-top:11px; }
 .note__time { font-size:11px; color:var(--ink-faint); }
 .note__ops { display:flex; gap:4px; opacity:.65; }
@@ -291,13 +297,16 @@ body[data-mood="fog"] .ambient__fog { filter: blur(76px); }
 }
 .card-title { margin:0 0 13px; font-size:13.5px; font-weight:600; }
 .heatmap { display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
-.heat-cell { aspect-ratio:1; border-radius:5px; background:var(--accent-soft); position:relative; }
+.heat-head { text-align:center; font-size:10px; color:var(--ink-faint); padding-bottom:2px; }
+.heat-cell { aspect-ratio:1; border-radius:6px; background:var(--accent-soft); position:relative; display:flex; align-items:center; justify-content:center; }
 .heat-cell.l1 { background:rgba(79,124,138,.28); }
 .heat-cell.l2 { background:rgba(79,124,138,.5); }
 .heat-cell.l3 { background:rgba(79,124,138,.72); }
 .heat-cell.l4 { background:var(--accent); }
+.heat-cell.is-deep .heat-day { color:#fff; }
 .heat-cell.blank { background:transparent; }
 .heat-cell.today { box-shadow:0 0 0 2px var(--ink); }
+.heat-day { font-size:10.5px; color:var(--ink-soft); font-variant-numeric:tabular-nums; }
 .heatmap-legend { display:flex; align-items:center; justify-content:flex-end; gap:4px; margin-top:10px; font-size:10px; color:var(--ink-faint); }
 .heatmap-legend i { width:11px; height:11px; border-radius:3px; display:inline-block; background:var(--accent-soft); }
 .heatmap-legend i.l1{background:rgba(79,124,138,.28)} .heatmap-legend i.l2{background:rgba(79,124,138,.5)}
@@ -372,8 +381,8 @@ body[data-mood="fog"] .ambient__fog { filter: blur(76px); }
 .editor-img { position:relative; width:76px; height:76px; }
 .editor-img img { width:100%; height:100%; object-fit:cover; border-radius:10px; }
 .editor-img button { position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; background:var(--danger); color:#fff; font-size:13px; line-height:1; display:grid; place-items:center; }
-.editor-tools { display:flex; gap:8px; margin-bottom:8px; }
-.add-image { display:flex; align-items:center; justify-content:center; gap:8px; padding:10px 14px; border-radius:12px; border:1px dashed var(--ink-faint); color:var(--ink-soft); font-size:13px; flex:1; }
+.editor-tools { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px; }
+.add-image { display:flex; align-items:center; justify-content:center; gap:6px; padding:9px 8px; border-radius:12px; border:1px dashed var(--ink-faint); color:var(--ink-soft); font-size:12.5px; flex:1 1 calc(50% - 4px); min-width:0; }
 .add-record { border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
 .add-record svg { width:19px; height:19px; }
 .add-image svg { width:19px; height:19px; }
@@ -397,6 +406,15 @@ body[data-mood="fog"] .ambient__fog { filter: blur(76px); }
 .editor-audio__ico { color:var(--accent); font-size:16px; width:16px; text-align:center; flex-shrink:0; }
 .editor-audio audio { flex:1; min-width:0; height:38px; }
 .editor-audio button { width:24px; height:24px; border-radius:50%; color:var(--danger); background:var(--card-strong); font-size:16px; line-height:1; display:grid; place-items:center; flex-shrink:0; }
+
+/* ---- 编辑器视频列表 ---- */
+.editor-subtools { display:flex; justify-content:flex-end; margin:-2px 0 12px; }
+.link-tool { font-size:12px; color:var(--accent); padding:4px 2px; }
+.editor-videos { display:flex; flex-direction:column; gap:10px; margin-bottom:14px; }
+.editor-videos:empty { display:none; }
+.editor-video { position:relative; }
+.editor-video video { width:100%; max-height:220px; border-radius:12px; background:#000; display:block; }
+.editor-video button { position:absolute; top:8px; right:8px; width:26px; height:26px; border-radius:50%; color:#fff; background:rgba(0,0,0,.55); font-size:17px; line-height:1; display:grid; place-items:center; }
 .field-line { display:flex; align-items:center; justify-content:space-between; padding-top:14px; border-top:1px solid var(--line); }
 .field-line label { font-size:13px; color:var(--ink-soft); }
 .field-line select { max-width:60%; border:1px solid var(--line); border-radius:10px; background:var(--card-strong); padding:8px 10px; font-size:13px; outline:0; }

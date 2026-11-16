@@ -43,18 +43,31 @@
     });
 
     var today = new Date();
+    // 星期表头（周一开头）
+    ['一', '二', '三', '四', '五', '六', '日'].forEach(function (w) {
+      var head = document.createElement('div');
+      head.className = 'heat-head';
+      head.textContent = w;
+      box.appendChild(head);
+    });
     for (var i = 0; i < lead; i++) {
       var blank = document.createElement('div');
       blank.className = 'heat-cell blank';
       box.appendChild(blank);
     }
     for (var day = 1; day <= days; day++) {
+      var lv = levelOf(counts[day]);
       var cell = document.createElement('div');
-      cell.className = 'heat-cell l' + levelOf(counts[day]);
+      cell.className = 'heat-cell l' + lv;
+      if (lv >= 3) cell.classList.add('is-deep');
       if (today.getFullYear() === year && today.getMonth() === month && today.getDate() === day) {
         cell.classList.add('today');
       }
       cell.title = (month + 1) + '月' + day + '日 · ' + counts[day] + ' 条';
+      var label = document.createElement('span');
+      label.className = 'heat-day';
+      label.textContent = day;
+      cell.appendChild(label);
       box.appendChild(cell);
     }
   }

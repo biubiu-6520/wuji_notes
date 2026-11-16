@@ -71,6 +71,7 @@
       text: (data.text || '').trim(),
       images: data.images || [],
       audios: data.audios || [],
+      videos: data.videos || [],
       groupId: data.groupId || '',
       createdAt: data.createdAt || Date.now(),
       updatedAt: Date.now()
@@ -234,8 +235,23 @@
     });
   }
 
+  /* 读取任意媒体文件为 dataURL（视频/拍照原图）。可限制最大字节数。 */
+  function readAsDataURL(file, maxBytes) {
+    return new Promise(function (resolve, reject) {
+      if (maxBytes && file.size > maxBytes) {
+        reject(new Error('文件过大（上限 ' + Math.round(maxBytes / 1048576) + 'MB）'));
+        return;
+      }
+      var reader = new FileReader();
+      reader.onerror = function () { reject(new Error('读取文件失败')); };
+      reader.onload = function () { resolve(reader.result); };
+      reader.readAsDataURL(file);
+    });
+  }
+
   global.DB = {
     uid: uid,
+    readAsDataURL: readAsDataURL,
     GROUP_COLORS: GROUP_COLORS,
     addNote: addNote,
     updateNote: updateNote,

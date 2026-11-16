@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#7fb0b5">
+  <meta name="description" content="雾记 - 记录日常写作灵感">
+  <title>雾记 · 灵感笔记</title>
+  <link rel="manifest" href="manifest.json">
+  <!-- iOS Safari「添加到主屏幕」全屏运行与图标 -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="雾记">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ============ 雾化动态背景 ============ -->
+  <div id="ambient" class="ambient" aria-hidden="true">
+    <div class="ambient__base"></div>
+    <div class="ambient__glow"></div>
+    <div class="ambient__fog ambient__fog--1"></div>
+    <div class="ambient__fog ambient__fog--2"></div>
+    <div class="ambient__fog ambient__fog--3"></div>
+    <div class="ambient__veil"></div>
+    <div class="ambient__grain"></div>
+  </div>
+
+  <!-- ============ 应用主体 ============ -->
+  <div class="app">
+
+    <header class="topbar">
+      <div class="topbar__row">
+        <button id="btnDrawer" class="icon-btn" aria-label="打开分组">
+          <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <div class="brand">
+          <h1>雾记</h1>
+          <span id="weatherLine" class="weather-line">正在感知此刻天气…</span>
+        </div>
+        <button id="btnSearch" class="icon-btn" aria-label="搜索">
+          <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+        </button>
+      </div>
+      <div id="searchWrap" class="search-wrap is-hidden">
+        <svg class="search-ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>
+        <input id="searchInput" type="search" placeholder="搜索灵感文字…" autocomplete="off">
+        <button id="btnClearSearch" class="search-clear" aria-label="清除">×</button>
+      </div>
+    </header>
+
+    <main class="main">
+
+      <!-- ---- 灵感列表 ---- -->
+      <section id="page-notes" class="page is-active">
+        <div class="section-head">
+          <div>
+            <h2 id="listTitle">全部灵感</h2>
+            <p id="listMeta" class="section-sub">按时间排序</p>
+          </div>
+          <span id="listCount" class="pill">0 条</span>
+        </div>
+        <div id="notesList" class="notes-list"></div>
+        <div id="notesEmpty" class="empty is-hidden">
+          <div class="empty__icon">✎</div>
+          <p>还没有灵感</p>
+          <span>点右下角 + 记下第一个念头</span>
+        </div>
+      </section>
+
+      <!-- ---- 分组管理 ---- -->
+      <section id="page-groups" class="page">
+        <div class="section-head">
+          <div>
+            <h2>分组</h2>
+            <p class="section-sub">整理你的灵感</p>
+          </div>
+        </div>
+        <div id="groupGrid" class="group-grid"></div>
+        <button id="btnNewGroupPage" class="dash-add">
+          <span>＋</span> 新建分组
+        </button>
+      </section>
+
+      <!-- ---- 月度总结 ---- -->
+      <section id="page-summary" class="page">
+        <div class="section-head">
+          <div>
+            <h2>月度总结</h2>
+            <p class="section-sub">回望你的创作轨迹</p>
+          </div>
+          <div class="month-nav">
+            <button id="prevMonth" class="mini-btn" aria-label="上个月">‹</button>
+            <span id="monthLabel" class="month-label">—</span>
+            <button id="nextMonth" class="mini-btn" aria-label="下个月">›</button>
+          </div>
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card"><span id="statTotal" class="stat-num">0</span><span class="stat-label">条灵感</span></div>
+          <div class="stat-card"><span id="statActive" class="stat-num">0</span><span class="stat-label">个活跃日</span></div>
+          <div class="stat-card"><span id="statPhotos" class="stat-num">0</span><span class="stat-label">张图片</span></div>
+        </div>
+        <div class="card-block">
+          <h3 class="card-title">创作热力图</h3>
+          <div id="heatmap" class="heatmap"></div>
+          <div class="heatmap-legend"><span>少</span><i class="l0"></i><i class="l1"></i><i class="l2"></i><i class="l3"></i><i class="l4"></i><span>多</span></div>
+        </div>
+        <div class="card-block">
+          <h3 class="card-title">分组分布</h3>
+          <div id="groupBars" class="bars"></div>
+        </div>
+        <div class="card-block">
+          <h3 class="card-title">月度高频词</h3>
+          <div id="wordCloud" class="words"></div>
+        </div>
+      </section>
+
+      <!-- ---- 设置 ---- -->
+      <section id="page-settings" class="page">
+        <div class="section-head">
+          <div>
+            <h2>设置</h2>
+            <p class="section-sub">个性化你的雾记</p>
+          </div>
+        </div>
+        <div class="card-block">
+          <h3 class="card-title">背景氛围</h3>
+          <div class="seg" id="bgModeSeg">
+            <button data-mode="auto" class="seg-btn is-on">跟随天气</button>
+            <button data-mode="time" class="seg-btn">仅时间</button>
+            <button data-mode="off" class="seg-btn">关闭</button>
+          </div>
+          <p class="hint">“跟随天气”会联网获取当前天气；“仅时间”完全离线，按早中晚变化。</p>
+        </div>
+        <div class="card-block">
+          <h3 class="card-title">天气城市</h3>
+          <div class="field-row">
+            <input id="cityInput" type="text" placeholder="如：杭州（留空则自动定位）" autocomplete="off">
+            <button id="btnSaveCity" class="solid-btn">保存</button>
+          </div>
+          <p id="weatherStatus" class="hint">定位失败时可手动填写城市。</p>
+        </div>
+        <div class="card-block">
+          <h3 class="card-title">数据</h3>
+          <button id="btnExport" class="list-btn">导出全部数据（JSON）</button>
+          <button id="btnImport" class="list-btn">导入数据</button>
+          <input id="importFile" type="file" accept="application/json" class="is-hidden">
+          <p class="hint">数据仅保存在本机，不会上传。</p>
+        </div>
+        <div class="card-block about-block">
+          <p>雾记 · 灵感笔记</p>
+          <span>把一闪而过的念头，留在雾里。</span>
+        </div>
+      </section>
+
+    </main>
+
+    <button id="fabAdd" class="fab" aria-label="新建灵感">
+      <svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+    </button>
+
+    <nav class="tabbar">
+      <button class="tab is-active" data-page="notes">
+        <svg viewBox="0 0 24 24"><path d="M5 4h11l3 3v13H5z"/><path d="M8 10h8M8 14h8M8 18h5"/></svg>
+        <span>灵感</span>
+      </button>
+      <button class="tab" data-page="groups">
+        <svg viewBox="0 0 24 24"><rect x="3" y="4" width="7" height="7" rx="1"/><rect x="14" y="4" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="6" rx="1"/><rect x="14" y="14" width="7" height="6" rx="1"/></svg>
+        <span>分组</span>
+      </button>
+      <button class="tab" data-page="summary">
+        <svg viewBox="0 0 24 24"><path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/></svg>
+        <span>总结</span>
+      </button>
+      <button class="tab" data-page="settings">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.4-2.4 1a7 7 0 0 0-1.7-1L14.5 3h-4l-.3 2.6a7 7 0 0 0-1.7 1l-2.4-1-2 3.4 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.4 2.4-1a7 7 0 0 0 1.7 1l.3 2.6h4l.3-2.6a7 7 0 0 0 1.7-1l2.4 1 2-3.4-2-1.5c.1-.3.1-.7.1-1z"/></svg>
+        <span>设置</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- ============ 分组抽屉 ============ -->
+  <div id="drawerMask" class="mask is-hidden"></div>
+  <aside id="drawer" class="drawer">
+    <div class="drawer-head">
+      <strong>全部分组</strong>
+      <button id="btnCloseDrawer" class="icon-btn small" aria-label="关闭">×</button>
+    </div>
+    <div id="drawerGroups" class="drawer-groups"></div>
+    <button id="btnNewGroupDrawer" class="drawer-add">＋ 新建分组</button>
+  </aside>
+
+  <!-- ============ 记录编辑面板 ============ -->
+  <div id="editorMask" class="mask is-hidden"></div>
+  <section id="editor" class="editor" role="dialog" aria-modal="true">
+    <div class="editor-head">
+      <button id="btnEditorCancel" class="text-btn">取消</button>
+      <strong id="editorTitle">记下灵感</strong>
+      <button id="btnEditorSave" class="text-btn primary">保存</button>
+    </div>
+    <div class="editor-body">
+      <textarea id="editorText" placeholder="此刻想到了什么…" rows="6"></textarea>
+      <div id="editorImages" class="editor-images"></div>
+      <div class="editor-tools">
+        <button id="btnAddImage" class="add-image">
+          <svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="8.5" cy="10" r="1.5"/><path d="M4 17l5-5 4 4 3-3 4 4"/></svg>
+          图片
+        </button>
+        <button id="btnCamera" class="add-image">
+          <svg viewBox="0 0 24 24"><path d="M4 8h3l2-2h6l2 2h3v11H4z"/><circle cx="12" cy="13" r="3.5"/></svg>
+          拍照
+        </button>
+        <button id="btnAddVideo" class="add-image">
+          <svg viewBox="0 0 24 24"><rect x="3" y="6" width="13" height="12" rx="2"/><path d="M16 10l5-3v10l-5-3z"/></svg>
+          视频
+        </button>
+        <button id="btnRecord" class="add-image add-record">
+          <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/></svg>
+          录音
+        </button>
+      </div>
+      <input id="imageInput" type="file" accept="image/*" multiple class="is-hidden">
+      <input id="videoInput" type="file" accept="video/*" multiple class="is-hidden">
+      <input id="cameraInput" type="file" accept="image/*" capture="environment" class="is-hidden">
+      <input id="camcorderInput" type="file" accept="video/*" capture="environment" class="is-hidden">
+      <div class="editor-subtools">
+        <button id="btnCamcorder" class="link-tool">拍摄视频</button>
+      </div>
+      <div id="recordStatus" class="record-status is-hidden">
+        <span class="record-pulse"></span>
+        <span class="record-label">正在录音</span>
+        <span id="recordTime" class="record-time">00:00</span>
+        <button id="btnStopRecord" class="record-stop">停止并保存</button>
+      </div>
+      <div id="editorAudios" class="editor-audios"></div>
+      <div id="editorVideos" class="editor-videos"></div>
+      <div class="field-line">
+        <label for="editorGroup">分组</label>
+        <select id="editorGroup"></select>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 分组命名弹窗 ============ -->
+  <div id="dialogMask" class="mask is-hidden"></div>
+  <div id="groupDialog" class="dialog is-hidden" role="dialog" aria-modal="true">
+    <h3 id="groupDialogTitle">新建分组</h3>
+    <input id="groupNameInput" type="text" placeholder="给分组起个名字" maxlength="20">
+    <div class="dialog-actions">
+      <button id="btnGroupDelete" class="text-btn danger is-hidden">删除分组</button>
+      <button id="btnGroupCancel" class="text-btn">取消</button>
+      <button id="btnGroupConfirm" class="text-btn primary">确定</button>
+    </div>
+  </div>
+
+  <!-- ============ 图片查看 ============ -->
+  <div id="lightbox" class="lightbox is-hidden">
+    <button id="btnCloseLightbox" class="lightbox-close" aria-label="关闭">×</button>
+    <img id="lightboxImg" src="" alt="图片预览">
+  </div>
+
+  <!-- ============ 确认弹窗 ============ -->
+  <div id="confirmMask" class="mask is-hidden"></div>
+  <div id="confirmDialog" class="dialog is-hidden" role="dialog" aria-modal="true">
+    <h3 id="confirmTitle">确认</h3>
+    <p id="confirmText" class="hint"></p>
+    <div class="dialog-actions">
+      <button id="btnConfirmCancel" class="text-btn">取消</button>
+      <button id="btnConfirmOk" class="text-btn danger">确定</button>
+    </div>
+  </div>
+
+  <div id="toast" class="toast is-hidden"></div>
+
+  <script src="js/db.js"></script>
+  <script src="js/weather.js"></script>
+  <script src="js/background.js"></script>
+  <script src="js/recorder.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/summary.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
