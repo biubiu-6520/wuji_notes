@@ -1,0 +1,9 @@
+{
+  "name": "wuji-notes",
+  "version": "1.0.0",
+  "private": true,
+  "description": "雾记 - 记录日常写作灵感的安卓小应用",
+  "scripts": {
+    "preview": "python -m http.server 3001 --directory www"
+  }
+}
